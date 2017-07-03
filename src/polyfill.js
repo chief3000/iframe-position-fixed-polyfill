@@ -50,24 +50,28 @@
     if ( !isInitialized ) {
       // Define properties
       me.element = element;
-      me.initialTop = initialStyles.top.indexOf('%') > -1 ? ( window.iFramePositionFixPolyfillConfiguration.parent.innerHeight / 100 * initialStyles.top.slice(0,-1) ) : element.offsetTop;
+      me.initialTop = 0;
       me.updateTimeout = null;
+      me.position;
 
       // Define internal functions
       me.update = function ( scrollTop ) {
         window.iFramePositionFixPolyfillConfiguration.log( 'updateScroll', me, scrollTop );
-        me.element.style.top = me.initialTop + ( scrollTop >= window.frameElement.offsetTop ? scrollTop - window.frameElement.offsetTop : scrollTop ) + 'px';
+        me.position = me.initialTop + scrollTop + 'px';
+        window.requestAnimationFrame(function(){me.element.style.transform = 'translateY(' + me.position + ')'});
       }
 
       // Initialize element position
-      me.element.style.top = me.initialTop + 'px';
+      me.position = me.initialTop + 'px';
+      me.element.style.transform = 'translateY(' + me.position + ')'
+      me.element.style.willChange = 'transform';
+      me.element.style.transition = '0.3s cubic-bezier(0.92, 0.13, 0.12, 0.96)';//'.3s cubic-bezier(.17,.36,0,1)'; // '.1s cubic-bezier(.55,0,.1,1)';
       me.element.setAttribute( 'data-iframe-position-fixed-initialized', true );
 
       // When the parent scrolls, attempt to update the element position ever 500ms.
       // If another scroll event comes in place, cancel the previous attempt and retry.
       window.iFramePositionFixPolyfillConfiguration.parent.addEventListener( 'scroll', function ( event ){
-        if ( me.updateTimeout ) clearTimeout( me.updateTimeout );
-        me.updateTimeout = setTimeout( function(){ me.update( window.iFramePositionFixPolyfillConfiguration.parent[ window.iFramePositionFixPolyfillConfiguration.parentScrollTopProperty ] ) }, 100 );
+        me.update( window.iFramePositionFixPolyfillConfiguration.parent[ window.iFramePositionFixPolyfillConfiguration.parentScrollTopProperty ] )
       }, true)
     }
   }
